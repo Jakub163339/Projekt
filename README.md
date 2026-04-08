@@ -33,8 +33,18 @@ Projekt polega na stworzeniu narzędzia do automatycznego skanowania systemu, si
 
   6.W ostatnim etapie  przygotowana zostanie dokumentacja projektu oraz końcowy raport bezpieczeństwa.
 
+  4. Link do repozytorium
+  https://github.com/Jakub163339/Projekt.git
 
-4. Link do repozytorium
-https://github.com/Jakub163339/Projekt.git
+  5. Screenshoty środowiska
 
-5. Screenshoty środowiska
+Część 2
+
+Test: Przeprowadzony test w wyniku którego spradziliśmy skanowanie portów TCP na lokalnym hoscie testowym przy użyciu autorskiego skryptu Python integrującego bibliotekę subprocess i Nmap. 
+
+Wnioski:
+Weryfikacja integracji: Skrypt poprawnie inicjuje proces Nmap i bezstratnie przechwytuje strumień danych (stdout), co pozwala na dalszą automatyzację obróbki wyników.
+Wydajność: Wykorzystanie flagi -F znacząco skraca czas skanowania, co jest optymalne dla szybkich testów diagnostycznych, ale może pomijać mniej popularne usługi.
+Formatowanie danych: Surowy format tekstowy z Nmapa jest trudny do analizy przez inne systemy. Wniosek: W kolejnym kroku należy wdrożyć eksport do formatu JSON.
+
+
