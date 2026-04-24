@@ -47,4 +47,21 @@ Weryfikacja integracji: Skrypt poprawnie inicjuje proces Nmap i bezstratnie prze
 Wydajność: Wykorzystanie flagi -F znacząco skraca czas skanowania, co jest optymalne dla szybkich testów diagnostycznych, ale może pomijać mniej popularne usługi.
 Formatowanie danych: Surowy format tekstowy z Nmapa jest trudny do analizy przez inne systemy. Wniosek: W kolejnym kroku należy wdrożyć eksport do formatu JSON.
 
+Część 3: 
+Wdrażanie poprawek i ponowne testy (Retest)
+
+W trakcie dalszych prac nad naszym skanerem zrobiliśmy audyt własnego kodu. Zauważyliśmy, że nasz skrypt z części drugiej działał dobrze, ale miał dwie niebezpieczne luki, które pozwalały na przejęcie nad nim kontroli. 
+
+Wykryte błędy w kodzie:
+1. Wstrzykiwanie obcych poleceń: Nasz program za bardzo ufał użytkownikowi. Jeśli ktoś zamiast zwykłego adresu IP wpisał złośliwą komendę systemową, skrypt uruchamiał ją w tle bez żadnego sprawdzania.
+2. Nadpisywanie plików w systemie: Przy tworzeniu raportu można było wpisać nazwę pliku zawierającą ukośniki. To pozwalało na "wyjście" z folderu projektu i podmianę dowolnego pliku na komputerze.
+
+Co dokładnie naprawiliśmy:
+Twarda weryfikacja IP: Dodaliśmy do Pythona wbudowaną bibliotekę "ipaddress". Dzięki temu skrypt najpierw analizuje wpisany tekst i jeśli nie jest to w 100% poprawny adres IP, natychmiast blokuje dalsze działanie.
+Czyszczenie nazw plików: Zabezpieczyliśmy proces zapisu raportów. Użyliśmy funkcji ".replace()", która automatycznie filtruje i wycina wszystkie ukośniki z nazwy podanej przez użytkownika. Raport zawsze zapisze się bezpiecznie tam, gdzie powinien.
+Zmiana wywołania: Poprawiliśmy sposób, w jaki Python komunikuje się z Nmapem, aby zablokować możliwość przemycania ukrytych komend.
+
+Wyniki ponownych testów:
+Po wdrożeniu poprawek przeprowadziliśmy test, próbując celowo "zhakować" nasze narzędzie. Wpisaliśmy złośliwy kod podszywający się pod adres IP. 
+Efekt: Skrypt zadziałał bezbłędnie. Od razu wykrył nieprawidłowy format, zablokował próbę ataku i bezpiecznie zamknął program. Luki zostały całkowicie załatane.
 
