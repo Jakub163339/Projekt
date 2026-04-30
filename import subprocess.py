@@ -3,10 +3,10 @@ import os
 import hmac
 import ipaddress
 
-SAFE_DIR = "raporty"
+SAFE_DIR = "raporty"  # FIX#004: ograniczenie zapisu do bezpiecznego katalogu
 
 
-# --- SEC-01: Bezpieczne sprawdzanie hasła ---
+# FIX#001: usunięcie hardcoded password + bezpieczne porównanie
 def sprawdz_haslo(podane):
     poprawne = os.getenv("ADMIN_PASSWORD")
     if poprawne is None:
@@ -15,7 +15,7 @@ def sprawdz_haslo(podane):
     return hmac.compare_digest(podane, poprawne)
 
 
-# --- SEC-02: Walidacja adresu IP ---
+# FIX#002: poprawna walidacja adresu IP
 def waliduj_ip(ip):
     try:
         ipaddress.ip_address(ip)
@@ -24,16 +24,16 @@ def waliduj_ip(ip):
         return False
 
 
-# --- SEC-03: Bezpieczna ścieżka zapisu ---
+# FIX#004: zabezpieczenie przed path traversal
 def bezpieczna_sciezka(nazwa):
-    nazwa = os.path.basename(nazwa)  # usuwa ../ itp.
+    nazwa = os.path.basename(nazwa)  # usuwa ../
     return os.path.join(SAFE_DIR, nazwa)
 
 
 def uruchom_skaner():
     print("=== ZAAWANSOWANY SKANER SIECIOWY v3.0 ===")
 
-    # Tworzenie katalogu na raporty
+    # FIX#004: tworzenie katalogu na raporty
     os.makedirs(SAFE_DIR, exist_ok=True)
 
     # Logowanie
@@ -54,15 +54,15 @@ def uruchom_skaner():
     print(f"Rozpoczynam skanowanie celu: {target}...")
 
     try:
-        # Bezpieczne wywołanie nmap
+        # FIX#003: usunięcie shell=True (ochrona przed command injection)
         wynik_skanowania = subprocess.check_output(
-            ["nmap", "-F", target],
+            ["nmap", "-F", target],  # argumenty jako lista
             text=True
         )
 
         # Nazwa pliku
         nazwa_pliku = input("Podaj nazwę dla pliku z raportem (np. raport1.txt): ")
-        sciezka = bezpieczna_sciezka(nazwa_pliku)
+        sciezka = bezpieczna_sciezka(nazwa_pliku)  # FIX#004
 
         # Zapis raportu
         with open(sciezka, 'w', encoding='utf-8') as plik:
@@ -77,6 +77,6 @@ def uruchom_skaner():
         print(f"[BŁĄD] Skrypt napotkał problem: {e}")
 
 
-# Uruchomienie
+# Uruchomienie programu
 if __name__ == "__main__":
     uruchom_skaner()
