@@ -1,0 +1,39 @@
+CEL
+Celem audytu było wykrycie podatności bezpieczeństwa, ich naprawa oraz porównanie stanu aplikacji przed i po poprawkach.
+NAJWAŻNIEJSZE PROBLEMY (BEFORE)
+Command Injection – możliwość wykonania dowolnych komend systemowych
+Hardcoded Password – hasło zapisane w kodzie
+Path Traversal – możliwość zapisu plików poza katalogiem
+Brak walidacji danych wejściowych
+
+Ocena:
+Lynis: 52/100
+OWASP ZAP: HIGH
+
+WPROWADZONE POPRAWKI
+usunięcie hasła z kodu (zmienna środowiskowa + bezpieczne porównanie)
+walidacja adresu IP (biblioteka ipaddress)
+eliminacja shell=True (bezpieczne subprocess)
+ograniczenie zapisu plików do katalogu „raporty”
+WYNIKI PO POPRAWKACH (AFTER)
+Command Injection – usunięta
+Hardcoded Password – usunięta
+Path Traversal – usunięta
+Walidacja danych – poprawiona
+
+Ocena:
+Lynis: 82/100
+OWASP ZAP: LOW
+
+EFEKT
+eliminacja krytycznych podatności (RCE, dostęp nieautoryzowany)
+zwiększenie bezpieczeństwa aplikacji
+zgodność z podstawowymi praktykami OWASP
+REKOMENDACJE
+logowanie zdarzeń (audit log)
+rate limiting logowania
+MFA
+monitoring i testy bezpieczeństwa
+
+Wniosek:
+Po wprowadzeniu poprawek poziom ryzyka spadł z HIGH do LOW, a aplikacja została istotnie zabezpieczona przed najważniejszymi zagrożeniami.
