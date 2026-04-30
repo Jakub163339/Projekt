@@ -1,44 +1,82 @@
 import subprocess
+import os
+import hmac
+import ipaddress
+
+SAFE_DIR = "raporty"
+
+
+# --- SEC-01: Bezpieczne sprawdzanie hasła ---
+def sprawdz_haslo(podane):
+    poprawne = os.getenv("ADMIN_PASSWORD")
+    if poprawne is None:
+        print("[BŁĄD] Brak ustawionego hasła w zmiennej środowiskowej ADMIN_PASSWORD!")
+        return False
+    return hmac.compare_digest(podane, poprawne)
+
+
+# --- SEC-02: Walidacja adresu IP ---
+def waliduj_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
+
+
+# --- SEC-03: Bezpieczna ścieżka zapisu ---
+def bezpieczna_sciezka(nazwa):
+    nazwa = os.path.basename(nazwa)  # usuwa ../ itp.
+    return os.path.join(SAFE_DIR, nazwa)
+
 
 def uruchom_skaner():
-    print("=== ZAAWANSOWANY SKANER SIECIOWY v2.0 ===")
-    
-    # --- LUKA 1: Zabezpieczenie dostępowe ---
+    print("=== ZAAWANSOWANY SKANER SIECIOWY v3.0 ===")
+
+    # Tworzenie katalogu na raporty
+    os.makedirs(SAFE_DIR, exist_ok=True)
+
+    # Logowanie
     haslo = input("Wprowadź hasło administratora: ")
-    if haslo != "Admin123!":
-        print("[BŁĄD] Odmowa dostępu. Złe hasło!")
+    if not sprawdz_haslo(haslo):
+        print("[BŁĄD] Odmowa dostępu.")
         return
 
     print("Zalogowano pomyślnie.\n")
-    
-    # --- LUKA 2: Walidacja adresu IP ---
+
+    # Pobranie IP
     target = input("Podaj adres IP do przeskanowania (np. 127.0.0.1): ")
-    
-    # "Zabezpieczenie": Skrypt sprawdza, czy wpisano chociaż jedną kropkę
-    if "." not in target:
-        print("[BŁĄD] Nieprawidłowy format IP! Adres musi zawierać kropki.")
+
+    if not waliduj_ip(target):
+        print("[BŁĄD] Nieprawidłowy adres IP!")
         return
 
     print(f"Rozpoczynam skanowanie celu: {target}...")
 
     try:
-        # --- LUKA 3: Wykonanie komendy systemowej ---
-        # Tworzymy komendę z podanego przez użytkownika tekstu i uruchamiamy w powłoce
-        komenda = f"nmap -F {target}"
-        wynik_skanowania = subprocess.check_output(komenda, shell=True).decode('utf-8')
-        
-        # --- LUKA 4: Zapis raportu ---
+        # Bezpieczne wywołanie nmap
+        wynik_skanowania = subprocess.check_output(
+            ["nmap", "-F", target],
+            text=True
+        )
+
+        # Nazwa pliku
         nazwa_pliku = input("Podaj nazwę dla pliku z raportem (np. raport1.txt): ")
-        
-        with open(nazwa_pliku, 'w', encoding='utf-8') as plik:
+        sciezka = bezpieczna_sciezka(nazwa_pliku)
+
+        # Zapis raportu
+        with open(sciezka, 'w', encoding='utf-8') as plik:
             plik.write("=== RAPORT SKANOWANIA ===\n")
             plik.write(wynik_skanowania)
-            
-        print(f"Skanowanie zakończone. Wynik zapisany jako: {nazwa_pliku}")
-        
+
+        print(f"Skanowanie zakończone. Wynik zapisany jako: {sciezka}")
+
+    except FileNotFoundError:
+        print("[BŁĄD] Narzędzie 'nmap' nie jest zainstalowane w systemie.")
     except Exception as e:
         print(f"[BŁĄD] Skrypt napotkał problem: {e}")
 
-# Uruchomienie głównej funkcji
+
+# Uruchomienie
 if __name__ == "__main__":
     uruchom_skaner()
