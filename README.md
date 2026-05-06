@@ -65,3 +65,37 @@ Wyniki ponownych testów:
 Po wdrożeniu poprawek przeprowadziliśmy test, próbując celowo "zhakować" nasze narzędzie. Wpisaliśmy złośliwy kod podszywający się pod adres IP. 
 Efekt: Skrypt zadziałał bezbłędnie. Od razu wykrył nieprawidłowy format, zablokował próbę ataku i bezpiecznie zamknął program. Luki zostały całkowicie załatane.
 
+Część 4:
+
+Celem projektu było zautomatyzowanie czynności, która wcześniej była wykonywana ręcznie: skanowania hosta za pomocą narzędzia `nmap` oraz zapisywania wyniku do pliku raportu.
+
+Automatyzacja pozwala szybciej wykonać skan, zmniejsza ryzyko błędów użytkownika i zapisuje wynik w uporządkowany sposób.
+
+## Opis działania
+
+Skrypt Python:
+
+1. Sprawdza hasło administratora ze zmiennej środowiskowej `ADMIN_PASSWORD`.
+2. Pobiera adres IP do przeskanowania.
+3. Waliduje adres IP przy użyciu biblioteki `ipaddress`.
+4. Uruchamia skanowanie `nmap -F`.
+5. Zapisuje wynik skanowania do katalogu `raporty`.
+6. Chroni przed:
+   - command injection,
+   - hardcoded password,
+   - path traversal,
+   - błędnymi danymi wejściowymi.
+
+## Wymagania
+
+- Python 3
+- Zainstalowany `nmap`
+- Ustawiona zmienna środowiskowa `ADMIN_PASSWORD`
+
+## Uruchomienie lokalne
+
+### Linux/macOS
+
+```bash
+export ADMIN_PASSWORD="twoje_haslo"
+python3 scanner.py
