@@ -2,20 +2,20 @@ import subprocess
 import os
 import hmac
 import ipaddress
+import time
+from datetime import datetime
 
-SAFE_DIR = "raporty"  # FIX#004: ograniczenie zapisu do bezpiecznego katalogu
+SAFE_DIR = "raporty"
 
 
-# FIX#001: usunięcie hardcoded password + bezpieczne porównanie
 def sprawdz_haslo(podane):
     poprawne = os.getenv("ADMIN_PASSWORD")
     if poprawne is None:
-        print("[BŁĄD] Brak ustawionego hasła w zmiennej środowiskowej ADMIN_PASSWORD!")
+        print("[BŁĄD] Brak zmiennej środowiskowej ADMIN_PASSWORD.")
         return False
     return hmac.compare_digest(podane, poprawne)
 
 
-# FIX#002: poprawna walidacja adresu IP
 def waliduj_ip(ip):
     try:
         ipaddress.ip_address(ip)
@@ -24,59 +24,57 @@ def waliduj_ip(ip):
         return False
 
 
-# FIX#004: zabezpieczenie przed path traversal
 def bezpieczna_sciezka(nazwa):
-    nazwa = os.path.basename(nazwa)  # usuwa ../
+    nazwa = os.path.basename(nazwa)
     return os.path.join(SAFE_DIR, nazwa)
 
 
 def uruchom_skaner():
-    print("=== ZAAWANSOWANY SKANER SIECIOWY v3.0 ===")
-
-    # FIX#004: tworzenie katalogu na raporty
     os.makedirs(SAFE_DIR, exist_ok=True)
 
-    # Logowanie
+    print("=== AUTOMATYCZNY SKANER BEZPIECZEŃSTWA ===")
+
     haslo = input("Wprowadź hasło administratora: ")
     if not sprawdz_haslo(haslo):
         print("[BŁĄD] Odmowa dostępu.")
         return
 
-    print("Zalogowano pomyślnie.\n")
-
-    # Pobranie IP
-    target = input("Podaj adres IP do przeskanowania (np. 127.0.0.1): ")
+    target = input("Podaj adres IP do przeskanowania, np. 127.0.0.1: ")
 
     if not waliduj_ip(target):
-        print("[BŁĄD] Nieprawidłowy adres IP!")
+        print("[BŁĄD] Nieprawidłowy adres IP.")
         return
 
-    print(f"Rozpoczynam skanowanie celu: {target}...")
+    start = time.time()
 
     try:
-        # FIX#003: usunięcie shell=True (ochrona przed command injection)
-        wynik_skanowania = subprocess.check_output(
-            ["nmap", "-F", target],  # argumenty jako lista
+        wynik = subprocess.check_output(
+            ["nmap", "-F", target],
             text=True
         )
 
-        # Nazwa pliku
-        nazwa_pliku = input("Podaj nazwę dla pliku z raportem (np. raport1.txt): ")
-        sciezka = bezpieczna_sciezka(nazwa_pliku)  # FIX#004
+        koniec = time.time()
+        czas = round(koniec - start, 2)
 
-        # Zapis raportu
-        with open(sciezka, 'w', encoding='utf-8') as plik:
+        data = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        nazwa_pliku = f"scan_report_{data}.txt"
+        sciezka = bezpieczna_sciezka(nazwa_pliku)
+
+        with open(sciezka, "w", encoding="utf-8") as plik:
             plik.write("=== RAPORT SKANOWANIA ===\n")
-            plik.write(wynik_skanowania)
+            plik.write(f"Cel skanowania: {target}\n")
+            plik.write(f"Czas wykonania skryptu: {czas} s\n\n")
+            plik.write(wynik)
 
-        print(f"Skanowanie zakończone. Wynik zapisany jako: {sciezka}")
+        print(f"Skanowanie zakończone.")
+        print(f"Czas wykonania: {czas} s")
+        print(f"Raport zapisany: {sciezka}")
 
     except FileNotFoundError:
-        print("[BŁĄD] Narzędzie 'nmap' nie jest zainstalowane w systemie.")
+        print("[BŁĄD] Narzędzie nmap nie jest zainstalowane.")
     except Exception as e:
-        print(f"[BŁĄD] Skrypt napotkał problem: {e}")
+        print(f"[BŁĄD] Wystąpił problem: {e}")
 
 
-# Uruchomienie programu
 if __name__ == "__main__":
     uruchom_skaner()
