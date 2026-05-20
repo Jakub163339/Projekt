@@ -96,6 +96,163 @@ Skrypt Python:
 
 ### Linux/macOS
 
-```bash
-export ADMIN_PASSWORD="twoje_haslo"
-python3 scanner.py
+Część 5:
+
+# 1. EXECUTIVE SUMMARY
+
+Celem projektu było przeprowadzenie automatycznego testu bezpieczeństwa systemu
+z wykorzystaniem narzędzia skanującego opartego o Nmap oraz Python.
+
+W trakcie analizy wykryto trzy krytyczne podatności:
+
+- CWE-78: OS Command Injection
+- CWE-209: Information Disclosure
+- CWE-798: Hardcoded Credentials
+
+Ogólny poziom bezpieczeństwa systemu oceniono jako:
+
+**NISKI / WYMAGAJĄCY POPRAWY**
+
+Zidentyfikowane problemy umożliwiają potencjalne:
+- wykonanie nieautoryzowanych komend systemowych,
+- ujawnienie informacji o błędach systemowych,
+- kompromitację danych uwierzytelniających.
+
+---
+
+# 2. ZAKRES I METODOLOGIA
+
+## Zakres testów
+- Skanowanie portów TCP
+- Identyfikacja usług sieciowych
+- Analiza podatności aplikacji skanującej
+
+## Środowisko testowe
+- Python 3.x
+- System operacyjny: Linux / Windows
+- Narzędzie: Nmap
+
+## Użyte narzędzia
+- Python subprocess
+- Python logging
+- Nmap
+
+## Czas trwania testów
+- 1–3 sekundy na skan
+
+## Ograniczenia
+- Brak skanowania UDP
+- Brak testów aplikacyjnych (web exploit)
+- Brak brute force / fuzzing
+
+---
+
+# 3. WYKRYTE PODATNOŚCI
+
+---
+
+## VULN-001 — CWE-78: OS Command Injection
+
+### Opis
+Aplikacja wykorzystuje `subprocess.check_output()` z `shell=True`,
+co umożliwia wykonanie dowolnych poleceń systemowych.
+
+### Kroki reprodukcji
+1. Uruchomić aplikację
+2. Wprowadzić payload:
+
+
+### Dowody
+Fragment kodu:
+
+``python
+subprocess.check_output(cmd, shell=True)
+
+
+Analiza ryzyka
+możliwość wykonania dowolnych komend systemowych
+pełna kompromitacja systemu
+Rekomendacja
+usunąć shell=True
+używać listy argumentów:
+["nmap", "-F", target]
+
+
+#VULN-002 — CWE-209: Information Disclosure
+Opis
+
+Aplikacja ujawnia szczegóły błędów użytkownikowi końcowemu.
+
+Kroki reprodukcji
+wywołać błąd (np. błędne dane wejściowe)
+Dowody
+print(f"[ERROR] {e}")
+Analiza ryzyka
+ujawnienie struktury systemu
+ułatwienie rekonesansu atakującemu
+Rekomendacja
+ukryć błędy przed użytkownikiem
+logować je tylko do pliku
+
+
+#VULN-003 — CWE-798: Hardcoded Credentials
+Opis
+
+Hasło administratora zapisane jest bezpośrednio w kodzie źródłowym.
+
+Kroki reprodukcji
+otworzyć plik źródłowy
+ADMIN_PASSWORD = "admin123"
+Dowody
+
+Kod źródłowy zawiera jawne hasło.
+
+Analiza ryzyka
+każdy z dostępem do kodu zna hasło
+pełna kompromitacja uwierzytelnienia
+Rekomendacja
+przenieść do zmiennych środowiskowych
+użyć .env lub systemu sekretów
+4. DOWODY TECHNICZNE
+Payloady testowe
+Command Injection
+Logi
+
+Plik:
+
+scanner.log
+
+Przykładowy wpis:
+
+2026-05-20 | INFO | Skan zakończony
+Wyniki skanowania
+
+Pliki:
+scanner.log
+
+5. PLAN POPRAWEK
+Krytyczne poprawki
+usunięcie shell=True
+przeniesienie haseł do zmiennych środowiskowych
+zmiana uprawnień plików na 600
+Dodatkowe ulepszenia
+walidacja input (whitelist)
+lepsze logowanie bezpieczeństwa
+szyfrowanie raportów
+
+6. ZAŁĄCZNIKI
+Narzędzia użyte w analizie
+Nmap
+Python logging
+subprocess
+Narzędzia rekomendowane
+Lynis (audyt systemu)
+OWASP ZAP (testy aplikacji web)
+Nmap (skan sieci)
+Pliki wynikowe
+scanner.py
+scanner.log
+raporty/*.txt
+
+
+
